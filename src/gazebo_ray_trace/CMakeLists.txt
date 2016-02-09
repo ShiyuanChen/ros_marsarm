@@ -62,8 +62,8 @@ add_executable(gazebo_rayTrace_plot src/rayTracePlotter.cpp)
 
 
 
-add_dependencies(gazebo_rayTrace_test gazebo_ray_trace_gencpp)
-add_dependencies(gazebo_rayTrace_plot gazebo_ray_trace_gencpp)
+# add_dependencies(gazebo_rayTrace_test gazebo_ray_trace_gencpp)
+# add_dependencies(gazebo_rayTrace_plot gazebo_ray_trace_gencpp)
 
 
 target_link_libraries(gazebo_rayTrace_test
@@ -86,6 +86,16 @@ target_link_libraries(distance_ray_trace
   ${SDF_LIBRARIES}
 )
 
+
+
+add_executable(test_node src/BradDemo.cpp)
+target_link_libraries(test_node
+	plot_ray_utils)
+
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h")
 
 
 
