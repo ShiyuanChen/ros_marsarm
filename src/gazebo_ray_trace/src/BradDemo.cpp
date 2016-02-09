@@ -21,6 +21,7 @@ int main(int argc, char **argv){
 
 
   std::vector<double> dist = plt.getDistToParticles(start, end);
+  plt.plotRay(start,end);
 
   for(int i=0; i < dist.size(); i++){
       ROS_INFO("Dist is %f", dist[i]);
