@@ -10,6 +10,7 @@
 #include <chrono>
 #include "tribox.h"
 #include "raytri.h"
+#include "circleEllipse.h"
 #include "distanceTransformNew.h"
 #include "particleFilter.h"
 #include "matrix.h"
@@ -38,10 +39,16 @@ typedef array<array<float, 3>, 4> vec4x3;
 #define SAMPLE_RATE 0.50
 #define MAX_ITERATION 100000
 #define COV_MULTIPLIER 5.0
-#define MIN_STD 1.0e-6
+#define MIN_STD 1.0e-7
+#define BEAM_RADIUS 0.002
+#define BEAM_STEPSIZE 0.001
+#define NUM_POLY_ITERATIONS 20
+
 
 int total_time = 0;
 int converge_count = 0;
+double TRUE_STATE[6] = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
+
 //vector<vec4x3> importSTL(string filename);
 
 /*

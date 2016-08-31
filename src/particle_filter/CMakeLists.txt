@@ -168,6 +168,10 @@ add_library(triBox src/tribox.cpp)
 target_link_libraries(triBox
   ${catkin_LIBRARIES})
 
+add_library(circleEllipse src/circleEllipse.cpp)
+target_link_libraries(circleEllipse
+  ${catkin_LIBRARIES})
+
 ## Declare a C++ executable
 # add_executable(first_node src/BradDemo.cpp)
 # target_link_libraries(first_node
@@ -196,6 +200,7 @@ target_link_libraries(pfilterBoeingTest
   distanceTransformNew
   rayTri
   triBox
+  circleEllipse
   ${PCL_LIBRARIES}
 )
 
