@@ -151,9 +151,9 @@ void ShapePlotter::updateMarkers()
     
     // POINTS markers use x and y scale for width/height respectively
     // Boeing part is in inches, we are in meters
-    points.markers[i].scale.x = 1.0;
-    points.markers[i].scale.y = 1.0;
-    points.markers[i].scale.z = 1.0;
+    points.markers[i].scale.x = .0254;
+    points.markers[i].scale.y = .0254;
+    points.markers[i].scale.z = .0254;
 
     points.markers[i].color.r = 0.74f;
     points.markers[i].color.g = 0.78f;
@@ -197,9 +197,9 @@ void ShapePlotter::updateTrueMarker()
     
     // POINTS markers use x and y scale for width/height respectively
     // Boeing part is in inches, we are in meters
-    part.scale.x = 1.0;
-    part.scale.y = 1.0;
-    part.scale.z = 1.0;
+    part.scale.x = .0254;
+    part.scale.y = .0254;
+    part.scale.z = .0254;
 
     part.color.r = 1.0f;
     part.color.g = 0.0f;
