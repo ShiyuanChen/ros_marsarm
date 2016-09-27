@@ -14,6 +14,7 @@
 #include "particleFilter.h"
 #include "matrix.h"
 #include "stlParser.h"
+#include "Node.h"
 
 
 using namespace std;
@@ -72,6 +73,7 @@ particleFilter::particleFilter(int n_particles, cspace b_init[2],
   particlesPrev.resize(numParticles);
 
   createParticles(particlesPrev, b_Xprior, numParticles);
+  particles = particlesPrev;
 
 #ifdef ADAPTIVE_BANDWIDTH
   Eigen::MatrixXd mat = Eigen::Map<Eigen::MatrixXd>((double *)particlesPrev.data(), cdim, numParticles);
@@ -101,9 +103,9 @@ void particleFilter::createParticles(Particles &particles_dest, cspace b_Xprior[
   normal_distribution<double> dist(0, 1);
   int cdim = sizeof(cspace) / sizeof(double);
   for (int i = 0; i < n_particles; i++) {
-	for (int j = 0; j < cdim; j++) {
-	  particles_dest[i][j] = b_Xprior[0][j] + b_Xprior[1][j] * (dist(rd));
-	}
+		for (int j = 0; j < cdim; j++) {
+		  particles_dest[i][j] = b_Xprior[0][j] + b_Xprior[1][j] * (dist(rd));
+		}
   }
 }
 
@@ -591,7 +593,7 @@ int main()
 /*
  * Transform the touch point from particle frame
  */
-void Transform(Eigen::Vector3d src, particleFilter::cspace config, Eigen::Vector3d &dest)
+void Transform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest)
 {
     Eigen::Matrix3d rotationC;
     rotationC << cos(config[5]), -sin(config[5]), 0,
@@ -647,7 +649,7 @@ void inverseTransform(double measure[2][3], particleFilter::cspace src, double d
   multiplyM(invRot, tempM, dest[0]);
   multiplyM(invRot, measure[1], dest[1]);
 }
-void inverseTransform(Eigen::Vector3d src, particleFilter::cspace config, Eigen::Vector3d &dest)
+void inverseTransform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest)
 {
     Eigen::Matrix3d rotationC;
     rotationC << cos(config[5]), -sin(config[5]), 0,

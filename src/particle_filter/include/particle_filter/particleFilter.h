@@ -41,11 +41,14 @@ class particleFilter
   Particles particles;  // Current set of particles
   Particles particlesPrev; // Previous set of particles
   Particles particles_1; // Previous previous set of particles
+  std::vector<Particles> particlesSet;
+
   Eigen::MatrixXd cov_mat;
 
   // Local functions
   void createParticles(Particles &particles, cspace b_Xprior[2], int n_particles);
   bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss);
+
 
 };
 // void Transform(double measure[3], particleFilter::cspace src, double dest[3]);
@@ -53,8 +56,8 @@ void Transform(double measure[2][3], particleFilter::cspace src, double dest[2][
 void inverseTransform(double measure[3], particleFilter::cspace src, double dest[3]);
 void inverseTransform(double measure[2][3], particleFilter::cspace src, double dest[2][3]);
 
-void Transform(Eigen::Vector3d src, particleFilter::cspace config, Eigen::Vector3d &dest);
-void inverseTransform(Eigen::Vector3d src, particleFilter::cspace config, Eigen::Vector3d &dest);
+void Transform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest);
+void inverseTransform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest);
 
 int checkInObject(vector<vec4x3> &mesh, double voxel_center[3]);
 int getIntersection(vector<vec4x3> &mesh, double pstart[3], double dir[3], double intersection[3]);

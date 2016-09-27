@@ -168,6 +168,10 @@ add_library(triBox src/tribox.cpp)
 target_link_libraries(triBox
   ${catkin_LIBRARIES})
 
+add_library(Node src/Node.cpp)
+target_link_libraries(Node
+  ${catkin_LIBRARIES})
+
 add_library(circleEllipse src/circleEllipse.cpp)
 target_link_libraries(circleEllipse
   ${catkin_LIBRARIES})
@@ -200,6 +204,7 @@ target_link_libraries(pfilterBoeingTest
   distanceTransformNew
   rayTri
   triBox
+  Node
   circleEllipse
   ${PCL_LIBRARIES}
 )
