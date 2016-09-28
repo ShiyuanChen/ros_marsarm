@@ -272,7 +272,7 @@ int main(int argc, char **argv)
   RayTracer rayt;
 
   std::random_device rd;
-  std::normal_distribution<double> randn(0.0,0.0005);
+  std::normal_distribution<double> randn(0.0,0.000001);
 
   ROS_INFO("Running...");
 
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
  
   geometry_msgs::Point obs;
   geometry_msgs::Point dir;
-  double radius = 0.001;
+  double radius = 0.00;
 
   int i = 0;
   //for(int i=0; i<20; i++){
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
     //tf::Point end(0.95,2,-0.15);
     tf::Point start, end;
     // randomSelection(plt, rayt, start, end);
-    fixedSelectionTest(plt, rayt, start, end);
+    fixedSelection(plt, rayt, start, end);
 
     Ray measurement(start, end);
     

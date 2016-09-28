@@ -6,10 +6,13 @@
 #include <unordered_set>
 #include <Eigen/Dense>
 #include "distanceTransformNew.h"
+#include "particleFilter.h"
+
 using namespace std;
 typedef array<array<float, 3>, 4> vec4x3;
 class Parent;
 
+// class particleFilter;
 class Node
 {
   friend class particleFilter;
@@ -23,14 +26,15 @@ class Node
 
   Node (int n_particles, particleFilter::cspace b_init[2]);
   Node (int n_particles, std::vector<Parent *> &p, int type);
-  
+  // void addObservation (double obs[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss = false);
+  void estimateGaussian(particleFilter::cspace &x_mean, particleFilter::cspace &x_est_stat);
+  void getAllParticles(Particles &particles_dest);
+
  protected:
-  // Parameters of filter
+  // Parameters of Node
   int type; // 0: root; 1: plane; 2. edge; 3. hole
-  double Xstd_ob; // observation measurement error
-  double Xstd_tran;
-  double Xstd_scatter; // default scattering of particles
-  double R; // probe radius
+  // double Xstd_ob; // observation measurement error
+  // double R; // probe radius
 
   // internal variables
   particleFilter::cspace b_Xprior[2]; // Initial distribution (mean and variance)
@@ -40,14 +44,13 @@ class Node
   Particles particles;  // Current set of particles
   Particles particlesPrev; // Previous set of particles
   // Particles particles_1; // Previous previous set of particles
-  std::vector<Particles> particlesSet;
   
   Eigen::MatrixXd cov_mat;
 
   // Local functions
   void createParticles(Particles &particles, particleFilter::cspace b_Xprior[2], int n_particles);
   void createParticles(std::vector<Parent *> &p);
-  bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss);
+  bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, double Xstd_ob, double R, bool miss);
 
 
 };

@@ -9,6 +9,7 @@
 using namespace std;
 typedef array<array<float, 3>, 4> vec4x3;
 
+class Node;
 class particleFilter
 {
  public:
@@ -19,8 +20,7 @@ class particleFilter
   int maxNumParticles;
 
   particleFilter (int n_particles, cspace b_init[2], 
-				double Xstd_ob=0.0001, double Xstd_tran=0.0025,
-				double Xstd_scatter=0.0001, double R=0.01);
+				double Xstd_ob=0.0001, double R=0.01);
 
   void addObservation (double obs[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss = false);
   //void addObservation (double obs[3], double cube[3], int idx_obs);
@@ -31,23 +31,22 @@ class particleFilter
   // Parameters of filter
   
   double Xstd_ob; // observation measurement error
-  double Xstd_tran;
-  double Xstd_scatter; // default scattering of particles
-  double R; // probe radius
 
+  double R; // probe radius
+  Node *root;
   // internal variables
   cspace b_Xprior[2]; // Initial distribution (mean and variance)
   //cspace b_Xpre[2];   // Previous (estimated) distribution (mean and variance)
-  Particles particles;  // Current set of particles
-  Particles particlesPrev; // Previous set of particles
-  Particles particles_1; // Previous previous set of particles
-  std::vector<Particles> particlesSet;
+  // Particles particles;  // Current set of particles
+  // Particles particlesPrev; // Previous set of particles
+  // Particles particles_1; // Previous previous set of particles
+  // std::vector<Particles> particlesSet;
 
-  Eigen::MatrixXd cov_mat;
+  // Eigen::MatrixXd cov_mat;
 
   // Local functions
-  void createParticles(Particles &particles, cspace b_Xprior[2], int n_particles);
-  bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss);
+  // void createParticles(Particles &particles, cspace b_Xprior[2], int n_particles);
+  // bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss);
 
 
 };

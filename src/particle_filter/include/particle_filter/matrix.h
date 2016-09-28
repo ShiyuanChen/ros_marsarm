@@ -1,5 +1,6 @@
 #ifndef MATRIX_H
 #define MATRIX_H
+#include "particleFilter.h"
 
 void multiplyM(double matrixA[3][3], double matrixB[3][3], double resultM[3][3]);
 void multiplyM(double matrixA[3][3], double matrixB[3], double resultM[3]);
