@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <array>
 #include <chrono>
+#include <cmath> 
 #include "tribox.h"
 #include "raytri.h"
 #include "circleEllipse.h"
@@ -69,6 +70,7 @@ particleFilter::particleFilter(int n_particles, cspace b_init[2],
   b_Xprior[0] = b_init[0];
   b_Xprior[1] = b_init[1];
   root = new Node(numParticles, b_Xprior);
+  // root->addDatum
   // particles.resize(numParticles);
   // particlesPrev.resize(numParticles);
 
@@ -83,6 +85,31 @@ particleFilter::particleFilter(int n_particles, cspace b_init[2],
 // #endif
   //W = new double[numParticles];
 }
+
+
+Node* particleFilter::addDatum(std::vector<Node*> node, std::vector<double[3]> offset, std::vector<double[3]> tol)
+{
+	// int n = node.size();
+	// for (int i = 0; i < n; i ++) {
+	// 	Node* nodeptr = node[i];
+	// 	Parent *parent = new Parent(nodeptr, )
+	// }
+}
+
+Node* particleFilter::addInitialDatum()
+{
+	Parent *parent = new Parent(root, 0, 0);
+	std::vector<Parent *> p;
+	p.push_back(parent);
+	root->child.push_back(new Node(numParticles, p, 1));
+	// int n = node.size();
+	// for (int i = 0; i < n; i ++) {
+	// 	Node* nodeptr = node[i];
+	// 	Parent *parent = new Parent(nodeptr, )
+	// }
+}
+
+
 
 void particleFilter::getAllParticles(Particles &particles_dest)
 {
@@ -119,13 +146,14 @@ void particleFilter::getAllParticles(Particles &particles_dest)
  */
 void particleFilter::addObservation(double obs[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss)
 {
-	particleFilter::cspace trueConfig = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
+	// particleFilter::cspace trueConfig = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
+	particleFilter::cspace trueConfig = {1.22, -0.025, 0, 0, 0, Pi};
   cout << "Xstd_Ob: " << Xstd_ob << endl;
   auto timer_begin = std::chrono::high_resolution_clock::now();
   std::random_device generator;
 
-  bool iffar = root->updateParticles(obs, mesh, dist_transform, Xstd_ob, R, miss);
-
+  // bool iffar = root->updateParticles(obs, mesh, dist_transform, Xstd_ob, R, miss);
+  bool iffar = root->child[0]->update(obs, Xstd_ob, R);
 
   auto timer_end = std::chrono::high_resolution_clock::now();
   auto timer_dur = timer_end - timer_begin;
@@ -194,7 +222,7 @@ void particleFilter::estimateGaussian(cspace &x_mean, cspace &x_est_stat) {
 // 	cout << x_est_stat[k] << "  ";
 //   }
 //   cout << endl;
-	root->estimateGaussian(x_mean, x_est_stat);
+	root->child[0]->estimateGaussian(x_mean, x_est_stat);
 }
 
 
@@ -988,4 +1016,117 @@ void calcDistance(vector<vec4x3> &mesh, particleFilter::cspace trueConfig, parti
             euclDist[1] = dist;
         }
     }
+}
+void transFrameConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig) {
+	Eigen::Matrix4d baseTrans, relativeTrans, absoluteTrans;
+	Eigen::Matrix3d rotationC, rotationB, rotationA;
+  rotationC << cos(baseConfig[5]), -sin(baseConfig[5]), 0,
+             sin(baseConfig[5]), cos(baseConfig[5]), 0,
+             0, 0, 1;
+  rotationB << cos(baseConfig[4]), 0 , sin(baseConfig[4]),
+             0, 1, 0,
+             -sin(baseConfig[4]), 0, cos(baseConfig[4]);
+  rotationA << 1, 0, 0 ,
+             0, cos(baseConfig[3]), -sin(baseConfig[3]),
+             0, sin(baseConfig[3]), cos(baseConfig[3]);
+  Eigen::Matrix3d rotation = rotationC * rotationB * rotationA;
+  baseTrans << rotation(0, 0), rotation(0, 1), rotation(0, 2), baseConfig[0],
+  						 rotation(1, 0), rotation(1, 1), rotation(1, 2), baseConfig[1],
+  						 rotation(2, 0), rotation(2, 1), rotation(2, 2), baseConfig[2],
+  						 0,              0,              0,              1;
+  rotationC << cos(relativeConfig[5]), -sin(relativeConfig[5]), 0,
+             sin(relativeConfig[5]), cos(relativeConfig[5]), 0,
+             0, 0, 1;
+  rotationB << cos(relativeConfig[4]), 0 , sin(relativeConfig[4]),
+             0, 1, 0,
+             -sin(relativeConfig[4]), 0, cos(relativeConfig[4]);
+  rotationA << 1, 0, 0 ,
+             0, cos(relativeConfig[3]), -sin(relativeConfig[3]),
+             0, sin(relativeConfig[3]), cos(relativeConfig[3]);
+  rotation = rotationC * rotationB * rotationA;
+  relativeTrans << rotation(0, 0), rotation(0, 1), rotation(0, 2), relativeConfig[0],
+  						     rotation(1, 0), rotation(1, 1), rotation(1, 2), relativeConfig[1],
+  						     rotation(2, 0), rotation(2, 1), rotation(2, 2), relativeConfig[2],
+  						     0,              0,              0,              1;
+  absoluteTrans = baseTrans * relativeTrans;
+  absoluteConfig[0] = absoluteTrans(0,3);
+  absoluteConfig[1] = absoluteTrans(1,3);
+  absoluteConfig[2] = absoluteTrans(2,3);
+  absoluteConfig[3] = atan2(absoluteTrans(2,1), absoluteTrans(2,2));
+  absoluteConfig[4] = atan2(-absoluteTrans(2,0), sqrt(SQ(absoluteTrans(2,1)) + SQ(absoluteTrans(2,2))));
+  absoluteConfig[5] = atan2(absoluteTrans(1,0), absoluteTrans(0,0));
+  // cout << absoluteTrans << endl;
+}
+
+void invTransFrameConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig) {
+	Eigen::Matrix4d baseTrans, relativeTrans, absoluteTrans;
+	Eigen::Matrix3d rotationC, rotationB, rotationA;
+  rotationC << cos(baseConfig[5]), -sin(baseConfig[5]), 0,
+             sin(baseConfig[5]), cos(baseConfig[5]), 0,
+             0, 0, 1;
+  rotationB << cos(baseConfig[4]), 0 , sin(baseConfig[4]),
+             0, 1, 0,
+             -sin(baseConfig[4]), 0, cos(baseConfig[4]);
+  rotationA << 1, 0, 0 ,
+             0, cos(baseConfig[3]), -sin(baseConfig[3]),
+             0, sin(baseConfig[3]), cos(baseConfig[3]);
+  Eigen::Matrix3d rotation = rotationC * rotationB * rotationA;
+  baseTrans << rotation(0, 0), rotation(0, 1), rotation(0, 2), baseConfig[0],
+  						 rotation(1, 0), rotation(1, 1), rotation(1, 2), baseConfig[1],
+  						 rotation(2, 0), rotation(2, 1), rotation(2, 2), baseConfig[2],
+  						 0,              0,              0,              1;
+  baseTrans = baseTrans.inverse().eval();
+  rotationC << cos(relativeConfig[5]), -sin(relativeConfig[5]), 0,
+             sin(relativeConfig[5]), cos(relativeConfig[5]), 0,
+             0, 0, 1;
+  rotationB << cos(relativeConfig[4]), 0 , sin(relativeConfig[4]),
+             0, 1, 0,
+             -sin(relativeConfig[4]), 0, cos(relativeConfig[4]);
+  rotationA << 1, 0, 0 ,
+             0, cos(relativeConfig[3]), -sin(relativeConfig[3]),
+             0, sin(relativeConfig[3]), cos(relativeConfig[3]);
+  rotation = rotationC * rotationB * rotationA;
+  relativeTrans << rotation(0, 0), rotation(0, 1), rotation(0, 2), relativeConfig[0],
+  						     rotation(1, 0), rotation(1, 1), rotation(1, 2), relativeConfig[1],
+  						     rotation(2, 0), rotation(2, 1), rotation(2, 2), relativeConfig[2],
+  						     0,              0,              0,              1;
+  absoluteTrans = baseTrans * relativeTrans;
+  absoluteConfig[0] = absoluteTrans(0,3);
+  absoluteConfig[1] = absoluteTrans(1,3);
+  absoluteConfig[2] = absoluteTrans(2,3);
+  absoluteConfig[3] = atan2(absoluteTrans(2,1), absoluteTrans(2,2));
+  absoluteConfig[4] = atan2(-absoluteTrans(2,0), sqrt(SQ(absoluteTrans(2,1)) + SQ(absoluteTrans(2,2))));
+  absoluteConfig[5] = atan2(absoluteTrans(1,0), absoluteTrans(0,0));
+  // cout << absoluteTrans << endl;
+}
+
+
+void transPointConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig) {
+	Eigen::Matrix4d baseTrans, relativeTrans, absoluteTrans;
+	Eigen::Matrix3d rotationC, rotationB, rotationA;
+  rotationC << cos(baseConfig[5]), -sin(baseConfig[5]), 0,
+             sin(baseConfig[5]), cos(baseConfig[5]), 0,
+             0, 0, 1;
+  rotationB << cos(baseConfig[4]), 0 , sin(baseConfig[4]),
+             0, 1, 0,
+             -sin(baseConfig[4]), 0, cos(baseConfig[4]);
+  rotationA << 1, 0, 0 ,
+             0, cos(baseConfig[3]), -sin(baseConfig[3]),
+             0, sin(baseConfig[3]), cos(baseConfig[3]);
+  Eigen::Matrix3d rotation = rotationC * rotationB * rotationA;
+  baseTrans << rotation(0, 0), rotation(0, 1), rotation(0, 2), baseConfig[0],
+  						 rotation(1, 0), rotation(1, 1), rotation(1, 2), baseConfig[1],
+  						 rotation(2, 0), rotation(2, 1), rotation(2, 2), baseConfig[2],
+  						 0,              0,              0,              1;
+  Eigen::Vector4d endPoint1, endPoint2;
+  endPoint1 << relativeConfig[0], relativeConfig[1], relativeConfig[2], 1;
+  endPoint2 << relativeConfig[3], relativeConfig[4], relativeConfig[5], 1;
+  endPoint1 = baseTrans * endPoint1;
+  endPoint2 = baseTrans * endPoint2;
+  absoluteConfig[0] = endPoint1(0);
+  absoluteConfig[1] = endPoint1(1);
+  absoluteConfig[2] = endPoint1(2);
+  absoluteConfig[3] = endPoint2(0);
+  absoluteConfig[4] = endPoint2(1);
+  absoluteConfig[5] = endPoint2(2);
 }

@@ -150,6 +150,10 @@ add_executable(boeing_localization src/boeingLocalization.cpp)
 target_link_libraries(boeing_localization
   ${catkin_LIBRARIES})
 
+add_executable(datum_localization src/datumLocalization.cpp)
+target_link_libraries(datum_localization
+  ${catkin_LIBRARIES})
+
 # add_executable(run_full_plate src/fullSystemPlate.cpp)
 # target_link_libraries(run_full_plate
 #   ${catkin_LIBRARIES})

@@ -26,6 +26,7 @@ class Node
 
   Node (int n_particles, particleFilter::cspace b_init[2]);
   Node (int n_particles, std::vector<Parent *> &p, int type);
+  Node (int n_particles, std::vector<Parent *> &p, particleFilter::cspace b_init[2]);
   // void addObservation (double obs[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss = false);
   void estimateGaussian(particleFilter::cspace &x_mean, particleFilter::cspace &x_est_stat);
   void getAllParticles(Particles &particles_dest);
@@ -33,6 +34,7 @@ class Node
  protected:
   // Parameters of Node
   int type; // 0: root; 1: plane; 2. edge; 3. hole
+  double length;
   // double Xstd_ob; // observation measurement error
   // double R; // probe radius
 
@@ -48,11 +50,17 @@ class Node
   Eigen::MatrixXd cov_mat;
 
   // Local functions
-  void createParticles(Particles &particles, particleFilter::cspace b_Xprior[2], int n_particles);
-  void createParticles(std::vector<Parent *> &p);
-  bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, double Xstd_ob, double R, bool miss);
+  void createParticles(particleFilter::cspace b_Xprior[2], int n_particles, int isRoot);
+  void createParticles();
+  void addDatum(double dist, double tol);
+  // bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, double Xstd_ob, double R, bool miss);
+  bool update(double cur_M[2][3], double Xstd_ob, double R);
+  void sampleConfig(particleFilter::cspace &config); // sample a config from the particles uniformly.
+  void propagate();
+  void resampleParticles(Particles &rootParticles, Particles &rootParticlesPrev, int n, double *W);
+  void sampleParticles();
 
-
+  // void calcWeight
 };
 
 class Parent
@@ -60,21 +68,27 @@ class Parent
   friend class particleFilter;
   friend class Node;
 public:
-  Parent(Node *p, double x, double y, double z, double tx, double ty, double tz) {
+  // Parent(Node *p, double x, double y, double z, double tx, double ty, double tz) {
+  //   node = p;
+  //   type = p->type;
+  //   offset[0] = x;
+  //   offset[1] = y;
+  //   offset[2] = z;
+  //   tol[0] = tx;
+  //   tol[1] = ty;
+  //   tol[2] = tz;
+  // }
+  Parent(Node *p, double offset, double tol):offset(offset),tol(tol) {
     node = p;
     type = p->type;
-    offset[0] = x;
-    offset[1] = y;
-    offset[2] = z;
-    tol[0] = tx;
-    tol[1] = ty;
-    tol[2] = tz;
   }
 protected:
   Node *node;
   int type;
-  double tol[3];
-  double offset[3];
+  // double tol[3];
+  // double offset[3];
+  double offset;
+  double tol;
 
 };
 

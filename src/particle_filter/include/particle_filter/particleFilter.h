@@ -47,8 +47,8 @@ class particleFilter
   // Local functions
   // void createParticles(Particles &particles, cspace b_Xprior[2], int n_particles);
   // bool updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss);
-
-
+  Node* addDatum(std::vector<Node*> node, std::vector<double[3]> offset, std::vector<double[3]> tol);
+  Node* addInitialDatum();
 };
 // void Transform(double measure[3], particleFilter::cspace src, double dest[3]);
 void Transform(double measure[2][3], particleFilter::cspace src, double dest[2][3]);
@@ -58,6 +58,7 @@ void inverseTransform(double measure[2][3], particleFilter::cspace src, double d
 void Transform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest);
 void inverseTransform(Eigen::Vector3d &src, particleFilter::cspace config, Eigen::Vector3d &dest);
 
+// void getDisplacement(particleFilter::)
 int checkInObject(vector<vec4x3> &mesh, double voxel_center[3]);
 int getIntersection(vector<vec4x3> &mesh, double pstart[3], double dir[3], double intersection[3]);
 double testResult(vector<vec4x3> &mesh, particleFilter::cspace config, double touch[2][3], double R);
@@ -66,5 +67,9 @@ int checkObstacles(vector<vec4x3> &mesh, particleFilter::cspace config, double s
 int checkIntersections(vector<vec4x3> &mesh, double voxel_center[3], double dir[3], double check_length, double &dist);
 int checkEmptyBin(std::unordered_set<string> *set, particleFilter::cspace config);
 void calcDistance(vector<vec4x3> &mesh, particleFilter::cspace trueConfig, particleFilter::cspace meanConfig, double euclDist[2]);
+void transPointConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig);
+void transFrameConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig);
+void invTransFrameConfig(particleFilter::cspace baseConfig, particleFilter::cspace relativeConfig, particleFilter::cspace &absoluteConfig);
+
 #endif // PARTICLE_FILTER_H
 

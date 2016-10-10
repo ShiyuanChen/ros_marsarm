@@ -246,6 +246,18 @@ void ShapePlotter::plotParticles(){
   q.setRPY(trueFrame[3],trueFrame[4], trueFrame[5]);
   trueTransform.setRotation(q);
 
+  tf::Transform planeTransform;
+  std::vector<double> planeFrame;
+  if(!n.getParam("/plane_frame", planeFrame)){
+    ROS_INFO("Failed to get param plane_frame");
+    planeFrame.resize(6);
+  }
+
+  planeTransform.setOrigin(tf::Vector3(planeFrame[0],planeFrame[1],planeFrame[2]));
+  q.setRPY(planeFrame[3],planeFrame[4], planeFrame[5]);
+  planeTransform.setRotation(q);
+
+  
   tf::StampedTransform tfstmp(particleTransform, ros::Time::now(),"my_frame", "particle_frame");
   tf::transformStampedTFToMsg(tfstmp, trans);
     br.sendTransform(trans);
@@ -254,6 +266,9 @@ void ShapePlotter::plotParticles(){
   tf::transformStampedTFToMsg(tfstmp, trans);
     br.sendTransform(trans);
 
+  tfstmp = tf::StampedTransform(planeTransform, ros::Time::now(),"my_frame", "plane_frame");
+  tf::transformStampedTFToMsg(tfstmp, trans);
+    br.sendTransform(trans);
 
   tfstmp = tf::StampedTransform(unityTransform, ros::Time::now(),"base_plate", "my_frame");
     tf::transformStampedTFToMsg(tfstmp, trans);
