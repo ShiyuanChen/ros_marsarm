@@ -176,7 +176,7 @@ void randomSelection(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, 
  * Randomly chooses vectors, gets the Information Gain for each of 
  *  those vectors, and returns the ray (start and end) with the highest information gain
  */
-void fixedSelectionTest(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, tf::Point &best_end)
+void fixedSelectionPlane(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, tf::Point &best_end)
 {
   int index;
   double bestIG = 0;
@@ -220,6 +220,54 @@ void fixedSelectionTest(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_star
   plt.plotRay(Ray(best_start, best_end));
   
 }
+
+/**
+ * Randomly chooses vectors, gets the Information Gain for each of 
+ *  those vectors, and returns the ray (start and end) with the highest information gain
+ */
+void fixedSelectionEdge(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, tf::Point &best_end)
+{
+  int index;
+  double bestIG = 0;
+  tf::Point tf_start;
+  tf::Point tf_end;
+  bestIG = 0;
+  std::random_device rd;
+  std::uniform_real_distribution<double> rand(0, 1);
+  std::uniform_int_distribution<> int_rand(0, 2);
+  Eigen::Vector3d start;
+  Eigen::Vector3d end;
+  
+  for(int i=0; i<10; i++){
+    double x = rand(rd) * 0.9 + 0.1;
+    start << x, 1, 0.0;
+    end << x, -1, 0.0;
+
+    tf_start.setValue(start(0, 0), start(1, 0), start(2, 0));
+    tf_end.setValue(end(0, 0), end(1, 0), end(2, 0));
+    Ray measurement(tf_start, tf_end);
+    // auto timer_begin = std::chrono::high_resolution_clock::now();
+    double IG = rayt.getIG(measurement, 0.01, 0.002);
+    // plt.plotRay(measurement);
+    // plt.labelRay(measurement, IG);
+    // auto timer_end = std::chrono::high_resolution_clock::now();
+    // auto timer_dur = timer_end - timer_begin;
+    // cout << "IG: " << IG << endl;
+    // cout << "Elapsed time for ray: " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_dur).count() << endl;
+    // double IG = plt.getIG(start, end, 0.01, 0.002);
+    if (IG > bestIG){
+      bestIG = IG;
+      best_start = tf_start;
+      best_end = tf_end;
+    }
+  }
+  // plt.plotCylinder(best_start, best_end, 0.01, 0.002, true);
+  ROS_INFO("Ray is: %f, %f, %f.  %f, %f, %f", 
+     best_start.getX(), best_start.getY(), best_start.getZ(),
+     best_end.getX(), best_end.getY(), best_end.getZ());
+  plt.plotRay(Ray(best_start, best_end));
+  
+}
 // bool getIntersection(PlotRayUtils &plt, tf::Point start, tf::Point end, tf::Point &intersection){
 //   bool intersectionExists = plt.getIntersectionWithPart(start, end, intersection);
 //   double radius = 0.001;
@@ -236,7 +284,7 @@ int main(int argc, char **argv)
   RayTracer rayt;
 
   std::random_device rd;
-  std::normal_distribution<double> randn(0.0,0.000001);
+  std::normal_distribution<double> randn(0.0,0.001);
 
   ROS_INFO("Running...");
 
@@ -262,11 +310,12 @@ int main(int argc, char **argv)
     //tf::Point end(0.95,2,-0.15);
     tf::Point start, end;
     // randomSelection(plt, rayt, start, end);
-    fixedSelectionTest(plt, rayt, start, end);
+    fixedSelectionEdge(plt, rayt, start, end);
 
     Ray measurement(start, end);
     
-    double distToPart = 1.025;
+    // double distToPart = 1.025;
+    double distToPart = 1;
     // if(!rayt.traceRay(measurement, distToPart)){
     //   ROS_INFO("NO INTERSECTION, Skipping");
     //   continue;

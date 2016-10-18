@@ -153,7 +153,7 @@ void particleFilter::addObservation(double obs[2][3], vector<vec4x3> &mesh, dist
   std::random_device generator;
 
   // bool iffar = root->updateParticles(obs, mesh, dist_transform, Xstd_ob, R, miss);
-  bool iffar = root->child[0]->update(obs, Xstd_ob, R);
+  bool iffar = root->child[1]->update(obs, Xstd_ob, R);
 
   auto timer_end = std::chrono::high_resolution_clock::now();
   auto timer_dur = timer_end - timer_begin;
@@ -222,7 +222,7 @@ void particleFilter::estimateGaussian(cspace &x_mean, cspace &x_est_stat) {
 // 	cout << x_est_stat[k] << "  ";
 //   }
 //   cout << endl;
-	root->child[0]->estimateGaussian(x_mean, x_est_stat);
+	root->child[1]->estimateGaussian(x_mean, x_est_stat);
 }
 
 
@@ -1129,4 +1129,8 @@ void transPointConfig(particleFilter::cspace baseConfig, particleFilter::cspace 
   absoluteConfig[3] = endPoint2(0);
   absoluteConfig[4] = endPoint2(1);
   absoluteConfig[5] = endPoint2(2);
+}
+
+int particleFilter::getNumParticles() {
+	return root->child[1]->numParticles;
 }

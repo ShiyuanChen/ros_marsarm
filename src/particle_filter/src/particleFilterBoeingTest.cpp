@@ -183,7 +183,8 @@ geometry_msgs::PoseArray PFilterTest::getParticlePoseArray()
   boost::mutex::scoped_lock updateLock(updateModelMutex);	
   basic_cloud_ptr1->points.clear();
   basic_cloud_ptr2->points.clear();
-  for (int j = 0; j < pFilter_.numParticles; j++ ) {
+  int numParticles = pFilter_.getNumParticles();
+  for (int j = 0; j < numParticles; j++ ) {
   	pcl::PointXYZ basic_point;
   	basic_point.x = particles[j][0] * 2;
   	basic_point.y = particles[j][1] * 2;

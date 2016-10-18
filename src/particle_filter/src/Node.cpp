@@ -314,50 +314,6 @@ void Node::sampleConfig(particleFilter::cspace &config) {
   std::uniform_int_distribution<> dist(0, numParticles - 1);
   config = particlesPrev[int(dist(rd))];
 }
-// /*
-//  * Add new observation and call updateParticles() to update the particles
-//  * Input: obs: observation
-//  *        mesh: object mesh arrays
-//  *        dist_transform: distance transform class instance
-//  *        miss: if it is a miss touch
-//  * output: none
-//  */
-// void Node::addObservation(double obs[2][3], vector<vec4x3> &mesh, distanceTransform *dist_transform, bool miss)
-// {
-//   particleFilter::cspace trueConfig = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
-//   cout << "Xstd_Ob: " << Xstd_ob << endl;
-//   auto timer_begin = std::chrono::high_resolution_clock::now();
-//   std::random_device generator;
-
-//   bool iffar = updateParticles(obs, mesh, dist_transform, miss);
-
-//   particlesPrev = particles;
-
-//   auto timer_end = std::chrono::high_resolution_clock::now();
-//   auto timer_dur = timer_end - timer_begin;
-
-//   particleFilter::cspace particles_mean, tmp2;
-//   estimateGaussian(particles_mean, tmp2);
-//   cout << "Estimate diff: ";
-//   double est_diff = sqrt(SQ(particles_mean[0] - trueConfig[0]) + SQ(particles_mean[1] - trueConfig[1]) + SQ(particles_mean[2] - trueConfig[2])
-//                        + SQ(particles_mean[3] - trueConfig[3]) + SQ(particles_mean[4] - trueConfig[4]) + SQ(particles_mean[5] - trueConfig[5]));
-//   cout << est_diff << endl;
-//   if (est_diff >= 0.005) {
-//     converge_count ++;
-//   }
-//   double est_diff_trans = sqrt(SQ(particles_mean[0] - trueConfig[0]) + SQ(particles_mean[1] - trueConfig[1]) + SQ(particles_mean[2] - trueConfig[2]));
-//   double est_diff_rot = sqrt(SQ(particles_mean[3] - trueConfig[3]) + SQ(particles_mean[4] - trueConfig[4]) + SQ(particles_mean[5] - trueConfig[5]));
-
-//   cout << "Converge count: " << converge_count << endl;
-//   cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_dur).count() << endl;
-//   total_time += std::chrono::duration_cast<std::chrono::milliseconds>(timer_dur).count();
-//   cout << "Total time: " << total_time << endl;
-//   cout << "Average time: " << total_time / 20.0 << endl;
-//   double euclideanDist[2];
-//   calcDistance(mesh, trueConfig, particles_mean, euclideanDist);
-//   cout << "Maximum workspace distance: " << euclideanDist[0] << endl;
-//   cout << "Minimum workspace distanceL " << euclideanDist[1] << endl << endl;
-// }
 
 void Node::estimateGaussian(particleFilter::cspace &x_mean, particleFilter::cspace &x_est_stat) {
   cout << "Estimated Mean: ";
@@ -717,6 +673,7 @@ void Node::resampleParticles(Particles &rootParticles, Particles &rootParticlesP
          break;
        }
      }
+     std::cout << rootParticles[i][0] << endl;
   }
   rootParticlesPrev = rootParticles;
 }
@@ -777,10 +734,6 @@ void Node::propagate() {
     estimateGaussian(curMean, curVar);
     for (int i = 0; i < numParticles; i ++ ) {
       invTransFrameConfig(curMean, particles[i], invParticles[i]);
-      // for (int j = 0; j < 6; j ++) {
-      //   cout << invParticles[i][j] << ", ";
-      // }
-      // cout << endl;
     }
     Eigen::MatrixXd mat = Eigen::Map<Eigen::MatrixXd>((double *)invParticles.data(), cdim, numParticles);
     Eigen::MatrixXd mat_centered = mat.colwise() - mat.rowwise().mean();
@@ -845,6 +798,62 @@ void Node::propagate() {
     // }
     resampleParticles(root->particles, root->particlesPrev, n, weight);
     root->sampleParticles();    
+  } else if (type == 2) { // Edge
+    Node *root = parent[0]->node;
+    // Particles *rootParticlesPrev = root->particlesPrev;
+    // Particles *rootParticles = root->particles;
+    int n = root->numParticles;
+    particleFilter::cspace tempConfig, tConfig;
+    particleFilter::cspace relativeConfig, baseConfig;
+    relativeConfig[0] = 0;
+    relativeConfig[1] = 0;
+    relativeConfig[2] = 0;
+    relativeConfig[3] = 1.22;
+    relativeConfig[4] = 0;
+    relativeConfig[5] = 0;
+
+    Eigen::MatrixXd mat = Eigen::Map<Eigen::MatrixXd>((double *)particles.data(), cdim, numParticles);
+    Eigen::MatrixXd mat_centered = mat.colwise() - mat.rowwise().mean();
+    Eigen::MatrixXd cov = (mat_centered * mat_centered.adjoint()) / double(max2(mat.cols() - 1, 1));
+    double coeff = pow(numParticles, -2.0/8.0) * 0.90360 * 100;
+    cov = coeff * cov;
+    Eigen::Matrix4d normalCov;
+    normalCov << cov(1, 1), cov(1, 2), cov(1, 4), cov(1, 5), 
+                 cov(2, 1), cov(2, 2), cov(2, 4), cov(2, 5), 
+                 cov(4, 1), cov(4, 2), cov(4, 4), cov(4, 5), 
+                 cov(5, 1), cov(5, 2), cov(5, 4), cov(5, 5);
+    cout << normalCov << endl;
+    double A = 1.0 / (sqrt(pow(2 * Pi, 4) * normalCov.determinant()));
+    Eigen::Matrix4d B = -0.5 * (normalCov.inverse());
+    double sum = 0;
+    double *weight = new double[n];
+    
+    for (int i = 1; i < n; i ++ ) {
+      tempConfig = root->particles[i];
+      transPointConfig(tempConfig, relativeConfig, tConfig);
+      weight[i] = 0;
+      Eigen::Vector4d x;
+      // cout << tempConfig[1] << endl;
+      for (int j = 0; j < numParticles; j ++) {
+        x << tConfig[1] - particles[j][1], tConfig[2] - particles[j][2], tConfig[4] - particles[j][4], tConfig[5] - particles[j][5];
+        weight[i] += A*exp(x.transpose() * B * x);
+      }
+      sum += weight[i];
+      // double diff = sqrt(SQ(tConfig[1]) + SQ(tConfig[3]) + SQ(tConfig[5]));
+      // if (diff < 0.1) {
+      //   for (int j = 0; j < cdim; j++) {
+      //     root->particles[idx][j] = tempConfig[j];
+      //   }
+      //   idx ++;
+      // }
+    }
+    for (int i = 0; i < n; i ++ ) {
+      weight[i] /= sum;
+      // cout << weight[i] << endl;
+    }
+    
+    resampleParticles(root->particles, root->particlesPrev, n, weight);
+    root->sampleParticles();    
   }
 }
 
@@ -901,6 +910,54 @@ bool Node::update(double cur_M[2][3], double Xstd_ob, double R) {
       inverseTransform(cur_M, tempState, cur_inv_M);
       touch_dir << cur_inv_M[1][0], cur_inv_M[1][1], cur_inv_M[1][2];
       D = abs(cur_inv_M[0][1] - R);
+      // cout << "D: " << D << endl;
+      
+      // if (xind >= (dist_transform->num_voxels[0] - 1) || yind >= (dist_transform->num_voxels[1] - 1) || zind >= (dist_transform->num_voxels[2] - 1))
+      //  continue;
+          
+      count += 1;
+      // if (sqrt(count) == floor(sqrt(count))) cout << "DDDD " << D << endl;
+      if (D <= signed_dist_check) {
+        // if (sqrt(count) == floor(sqrt(count))) cout << "D " << D << endl;
+        count2 ++;
+        for (int j = 0; j < cdim; j++) {
+          particles[i][j] = tempState[j];
+        }
+
+        if (checkEmptyBin(&bins, particles[i]) == 1) {
+          num_bins++;
+          // if (i >= N_MIN) {
+          //int numBins = bins.size();
+          numParticles = min2(maxNumParticles, max2(((num_bins - 1) * 2), N_MIN));
+          // }
+        }
+        //double d = testResult(mesh, particles[i], cur_M, R);
+        //if (d > 0.01)
+        //  cout << cur_inv_M[0][0] << "  " << cur_inv_M[0][1] << "  " << cur_inv_M[0][2] << "   " << d << "   " << D << //"   " << gradient << "   " << gradient.dot(touch_dir) << 
+        //       "   " << dist_adjacent[0] << "   " << dist_adjacent[1] << "   " << dist_adjacent[2] << "   " << particles[i][2] << endl;
+        i += 1;
+      }
+    }
+  } else if (type == 2) { // Plane
+    while (i < numParticles && i < maxNumParticles) {
+      idx = int(floor(distribution(rd)));
+
+      for (int j = 0; j < cdim; j++) {
+        samples(j, 0) = scl(j, 0) * dist(rd);
+      }
+      rot_sample = rot*samples;
+      for (int j = 0; j < cdim; j++) {
+        /* TODO: use quaternions instead of euler angles */
+        tempState[j] = b_X[idx][j] + rot_sample(j, 0);
+      }
+      Eigen::Vector3d x1, x2, x0, tmp1, tmp2;
+      x1 << tempState[0], tempState[1], tempState[2];
+      x2 << tempState[3], tempState[4], tempState[5];
+      x0 << cur_M[0][0], cur_M[0][1], cur_M[0][2];
+      tmp1 = x1 - x0;
+      tmp2 = x2 - x1;
+      D = (tmp1.squaredNorm() * tmp2.squaredNorm() - pow(tmp1.dot(tmp2),2)) / tmp2.squaredNorm();
+      D = abs(sqrt(D)- R);
       // cout << "D: " << D << endl;
       
       // if (xind >= (dist_transform->num_voxels[0] - 1) || yind >= (dist_transform->num_voxels[1] - 1) || zind >= (dist_transform->num_voxels[2] - 1))
