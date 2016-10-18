@@ -284,7 +284,7 @@ int main(int argc, char **argv)
   RayTracer rayt;
 
   std::random_device rd;
-  std::normal_distribution<double> randn(0.0,0.001);
+  std::normal_distribution<double> randn(0.0,0.0001);
 
   ROS_INFO("Running...");
 

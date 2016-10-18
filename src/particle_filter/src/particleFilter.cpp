@@ -113,7 +113,7 @@ Node* particleFilter::addInitialDatum()
 
 void particleFilter::getAllParticles(Particles &particles_dest)
 {
-  root->getAllParticles(particles_dest);
+  root->child[0]->getAllParticles(particles_dest);
 }
 
 // /*

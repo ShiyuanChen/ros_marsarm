@@ -48,7 +48,7 @@ double TRUE_STATE[6] = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
 // Construction for root
 Node::Node(int n_particles, particleFilter::cspace b_init[2]):numParticles(n_particles), type(0) {
   maxNumParticles = numParticles;
-
+  numUpdates = false;
   particles.resize(numParticles);
   particlesPrev.resize(numParticles);
 
@@ -73,7 +73,7 @@ Node::Node(int n_particles, particleFilter::cspace b_init[2]):numParticles(n_par
 // Construction for initial datums
 Node::Node (int n_particles, std::vector<Parent *> &p, particleFilter::cspace b_init[2]):numParticles(n_particles), type(2)  {
   maxNumParticles = numParticles;
-
+  numUpdates = false;
   particles.resize(numParticles);
   particlesPrev.resize(numParticles);
   int size = p.size();
@@ -91,7 +91,7 @@ Node::Node (int n_particles, std::vector<Parent *> &p, particleFilter::cspace b_
 // Construction for other datums
 Node::Node(int n_particles, std::vector<Parent *> &p, int t):numParticles(n_particles), type(t) {
   maxNumParticles = numParticles;
-
+  numUpdates = false;
   particles.resize(numParticles);
   particlesPrev.resize(numParticles);
   int size = p.size();
@@ -673,7 +673,6 @@ void Node::resampleParticles(Particles &rootParticles, Particles &rootParticlesP
          break;
        }
      }
-     std::cout << rootParticles[i][0] << endl;
   }
   rootParticlesPrev = rootParticles;
 }
@@ -713,10 +712,73 @@ void Node::sampleParticles() {
 }
 
 void Node::propagate() {
-  // double coeff = pow(numParticles, -0.2) * 0.87055/1.2155;
-  // Eigen::MatrixXd H_cov = coeff * cov_mat;
-  if (type == 1) { // Plane
+  numUpdates = !numUpdates;
+  if (type == 0) { // Root
+    int n = child.size();
+    for (int i = 0; i < n; i ++) {
+      Node *ch = child[i];
+      if (ch->numUpdates == numUpdates) continue;
+      if (i == 0) {
+        int chNumParticles = ch->numParticles;
+        particleFilter::cspace tempConfig, tConfig;
+        particleFilter::cspace relativeConfig, baseConfig;
+        particleFilter::cspace curMean, curVar;
+        Particles transParticles;
+        transParticles.resize(numParticles);
+        relativeConfig[0] = 1.22;
+        relativeConfig[1] = -0.025;
+        relativeConfig[2] = 0;
+        relativeConfig[3] = 0;
+        relativeConfig[4] = 0;
+        relativeConfig[5] = Pi;
+
+        // // estimateGaussian(curMean, curVar);
+        for (int i = 0; i < numParticles; i ++ ) {
+          transFrameConfig(particles[i], relativeConfig, transParticles[i]);
+        }
+        Eigen::MatrixXd mat = Eigen::Map<Eigen::MatrixXd>((double *)transParticles.data(), cdim, numParticles);
+        Eigen::MatrixXd mat_centered = mat.colwise() - mat.rowwise().mean();
+        Eigen::MatrixXd cov = (mat_centered * mat_centered.adjoint()) / double(max2(mat.cols() - 1, 1));
+        double coeff = pow(numParticles, -0.2) * 0.87055;
+        cov = coeff * cov;
+        double A = 1.0 / (sqrt(pow(2 * Pi, 6) * cov.determinant()));
+        Eigen::Matrix<double, 6, 6> B = -0.5 * (cov.inverse());
+        double sum = 0;
+        double *weight = new double[chNumParticles];
+        
+        for (int i = 1; i < chNumParticles; i ++ ) {
+          tempConfig = ch->particles[i];
+
+          weight[i] = 0;
+          Eigen::Matrix<double, 6, 1> x;
+          for (int j = 0; j < numParticles; j ++) {
+            x << tempConfig[0] - transParticles[j][0], tempConfig[1] - transParticles[j][1], tempConfig[2] - transParticles[j][2],
+                 tempConfig[3] - transParticles[j][3], tempConfig[4] - transParticles[j][4], tempConfig[5] - transParticles[j][5];
+            weight[i] += A*exp(x.transpose() * B * x);
+          }
+          sum += weight[i];
+          // double diff = sqrt(SQ(tConfig[1]) + SQ(tConfig[3]) + SQ(tConfig[5]));
+          // if (diff < 0.1) {
+          //   for (int j = 0; j < cdim; j++) {
+          //     root->particles[idx][j] = tempConfig[j];
+          //   }
+          //   idx ++;
+          // }
+        }
+        for (int i = 0; i < chNumParticles; i ++ ) {
+          weight[i] /= sum;
+          // cout << weight[i] << endl;
+        }
+        resampleParticles(ch->particles, ch->particlesPrev, chNumParticles, weight);
+        ch->sampleParticles(); 
+        ch->propagate();
+      }
+    }
+
+
+  } else if (type == 1) { // Plane
     Node *root = parent[0]->node;
+    if (root->numUpdates == numUpdates) return;
     // Particles *rootParticlesPrev = root->particlesPrev;
     // Particles *rootParticles = root->particles;
     int n = root->numParticles;
@@ -797,7 +859,8 @@ void Node::propagate() {
     //   }
     // }
     resampleParticles(root->particles, root->particlesPrev, n, weight);
-    root->sampleParticles();    
+    root->sampleParticles(); 
+    root->propagate();
   } else if (type == 2) { // Edge
     Node *root = parent[0]->node;
     // Particles *rootParticlesPrev = root->particlesPrev;
@@ -853,7 +916,8 @@ void Node::propagate() {
     }
     
     resampleParticles(root->particles, root->particlesPrev, n, weight);
-    root->sampleParticles();    
+    root->sampleParticles();
+    root->propagate();
   }
 }
 

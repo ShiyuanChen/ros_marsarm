@@ -35,6 +35,7 @@ class Node
   // Parameters of Node
   int type; // 0: root; 1: plane; 2. edge; 3. hole
   double length;
+  bool numUpdates;
   // double Xstd_ob; // observation measurement error
   // double R; // probe radius
 
