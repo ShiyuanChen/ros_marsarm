@@ -238,10 +238,10 @@ void fixedSelectionEdge(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_star
   Eigen::Vector3d start;
   Eigen::Vector3d end;
   
-  for(int i=0; i<10; i++){
+  for(int i=0; i<1; i++){
     double x = rand(rd) * 0.9 + 0.1;
-    start << x, 1, 0.0;
-    end << x, -1, 0.0;
+    start << x, 1, 0.23;
+    end << x, -1, 0.23;
 
     tf_start.setValue(start(0, 0), start(1, 0), start(2, 0));
     tf_end.setValue(end(0, 0), end(1, 0), end(2, 0));

@@ -153,7 +153,7 @@ void particleFilter::addObservation(double obs[2][3], vector<vec4x3> &mesh, dist
   std::random_device generator;
 
   // bool iffar = root->updateParticles(obs, mesh, dist_transform, Xstd_ob, R, miss);
-  bool iffar = root->child[1]->update(obs, Xstd_ob, R);
+  bool iffar = root->child[1]->child[0]->update(obs, Xstd_ob, R);
 
   auto timer_end = std::chrono::high_resolution_clock::now();
   auto timer_dur = timer_end - timer_begin;
@@ -1132,5 +1132,5 @@ void transPointConfig(particleFilter::cspace baseConfig, particleFilter::cspace 
 }
 
 int particleFilter::getNumParticles() {
-	return root->child[1]->numParticles;
+	return root->child[0]->numParticles;
 }
