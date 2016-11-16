@@ -16,6 +16,7 @@
 class Ray
 {
  public:
+  Ray();
   Ray(tf::Point start_, tf::Point end_);
 
   tf::Point start;
@@ -24,6 +25,7 @@ class Ray
   tf::Vector3 getDirection() const;
   Ray transform(tf::Transform trans);
   Ray getTransformed(tf::Transform trans) const;
+  tf::Point travelAlongFor(double dist) const;
 };
 
 class ParticleHandler
@@ -76,6 +78,7 @@ class RayTracer
   int getIntersection(array<double,3> pstart, array<double,3> dir, double &distToPart);
   bool tracePartFrameRay(const Ray &ray, double &distToPart);
   bool traceRay(Ray ray, double &distToPart);
+  bool traceRay(Ray ray, tf::Point &intersection);
   bool traceRay(const stl::Mesh &mesh, const Ray &ray, double &distToPart);
   bool traceAllParticles(Ray ray, std::vector<double> &distToPart);
 

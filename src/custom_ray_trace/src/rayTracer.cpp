@@ -3,11 +3,15 @@
 #include "BVH.h"
 #include <std_msgs/Empty.h>
 
+
 /*
  *************************
  ***     Ray           ***
  *************************
  */
+
+Ray::Ray(){
+}
  
 Ray::Ray(tf::Point start_, tf::Point end_)
 {
@@ -45,8 +49,13 @@ ParticleHandler::ParticleHandler()
 {
   particlesInitialized = false;
   newParticles = true;
-  tf_listener_.waitForTransform("/my_frame", "/particle_frame", ros::Time(0), ros::Duration(10.0));
-  tf_listener_.lookupTransform("/particle_frame", "/my_frame", ros::Time(0), trans_);
+  std::string name;
+  if(!rosnode.getParam("localization_object", name)){
+    ROS_INFO("Failed to get param: localization_object");
+  }
+
+  tf_listener_.waitForTransform("/my_frame", name, ros::Time(0), ros::Duration(10.0));
+  tf_listener_.lookupTransform(name, "/my_frame", ros::Time(0), trans_);
   particleSub = rosnode.subscribe("particles_from_filter", 1000, 
 				     &ParticleHandler::setParticles, this);
   requestParticlesPub = rosnode.advertise<std_msgs::Empty>("request_particles", 5);
@@ -60,7 +69,7 @@ tf::StampedTransform ParticleHandler::getTransformToPartFrame()
 
 void ParticleHandler::setParticles(geometry_msgs::PoseArray p)
 {
-  // ROS_INFO("setParticles called");
+  ROS_INFO("setting %d particles", p.poses.size());
   particles.resize(p.poses.size());
 
   
@@ -217,17 +226,6 @@ int RayTracer::getIntersection(array<double,3> pstart,
   return 1;
 }
 
-// stl::Mesh RayTracer::getBoxAroundAllParticles(stl::Mesh mesh)
-// {
-//   stl::Mesh allMesh;
-//   std::vector<tf::Transform> particles = particleHandler.getParticleSubset();
-
-//   for(tf::Transform particle : particles){
-//     stl::combineMesh(allMesh, stl::transformMesh(mesh, particle.inverse()));
-//   }
-//   return stl::getSurroundingBox(allMesh);
-// }
-
 
 /*
  *   Casts "ray" onto "mesh", set the distance, and returns true if intersection happened
@@ -302,10 +300,9 @@ bool RayTracer::traceAllParticles(Ray ray, std::vector<double> &distToPart)
   // 	   particles[0].getOrigin().getZ());
 
 
-  //Quick check to see if ray even has a chance of hitting any particle
+  //TODO - WOW This is handled poorly. traceAllParticles should not be keeping track of whether the state machine has processed the particles. This is confusing
   if(particleHandler.theseAreNewParticles()){
     particleHandler.newParticles = false;
-    // surroundingBoxAllParticles = getBoxAroundAllParticles(mesh);
   }
   
   // double tmp;
