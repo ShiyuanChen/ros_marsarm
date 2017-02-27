@@ -5,7 +5,7 @@
 <!-- There needs to be corresponding files  -->
 <!-- gazebo_ray_trace/sdf/[localization_object_cad].stl -->
 <!-- gazebo_ray_trace/worlds/[localization_object_cad].world -->
-  <arg name="localization_object" default="boeing_part"/>
+  <arg name="localization_object" default="wood_boeing"/>
 
   <node pkg="rviz" type="rviz" name="ParticleViz" 
   args="-d $(find using_markers)/src/rviz_config.rviz" required="true"/>

@@ -302,7 +302,7 @@ int main(int argc, char **argv)
     tf::Point start, end;
     // randomSelection(plt, rayt, start, end);
     auto timer_begin = std::chrono::high_resolution_clock::now();
-    fixedSelectionBoeing(plt, rayt, start, end);
+    fixedSelection(plt, rayt, start, end);
     auto timer_end = std::chrono::high_resolution_clock::now();
     auto timer_dur = timer_end - timer_begin;
     cout << "Elapsed RayCasting time: " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_dur).count() << endl;
