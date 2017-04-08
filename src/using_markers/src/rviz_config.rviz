@@ -16,7 +16,7 @@ Panels:
         - /MarkerArray1
         - /Marker5
       Splitter Ratio: 0.5
-    Tree Height: 747
+    Tree Height: 584
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -122,7 +122,7 @@ Visualization Manager:
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 70; 70; 70
+    Background Color: 255; 255; 255
     Fixed Frame: my_frame
     Frame Rate: 30
   Name: root
