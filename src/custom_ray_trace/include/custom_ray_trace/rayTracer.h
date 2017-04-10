@@ -38,12 +38,15 @@ class ParticleHandler
  public:
   ParticleHandler();
   tf::TransformListener tf_listener_;
+  tf::TransformListener tf_listener_true;
   tf::StampedTransform trans_;
+  tf::StampedTransform trans_true;
   std::vector<tf::Transform> particles;
   std::vector<tf::Transform> subsetParticles;
   bool newParticles;  
 
-  tf::StampedTransform getTransformToPartFrame();  
+  tf::StampedTransform getTransformToPartFrame();
+  tf::StampedTransform getTransformToTrueFrame();
   void setParticles(geometry_msgs::PoseArray p);
   std::vector<tf::Transform> getParticles();
   std::vector<tf::Transform> getParticleSubset();
@@ -88,6 +91,7 @@ class RayTracer
   // stl::Mesh getBoxAroundAllParticles(stl::Mesh mesh);
 
   void transformRayToPartFrame(Ray &ray);
+  void transformRayToTrueFrame(Ray &ray);
   ParticleHandler particleHandler;
 };
 

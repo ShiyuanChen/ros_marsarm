@@ -166,7 +166,7 @@ visualization_msgs::Marker PlotRayUtils::createRayMarker(Ray ray, int index)
  
   marker.scale.x = 0.005;
   marker.scale.y = 0.04; //Head Width
-  // marker.scale.z = 1.0;
+  marker.scale.z = 0.05;
  
   // Set the color -- be sure to set alpha to something non-zero!
   marker.color.r = 0.0f;

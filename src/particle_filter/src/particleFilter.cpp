@@ -283,7 +283,7 @@ bool particleFilter::updateParticles(double cur_M[2][3], vector<vec4x3> &mesh, d
     dist_transform->build();
     cout << "Finish building DT !!" << endl;
 #ifdef ADAPTIVE_BANDWIDTH
-    double coeff = pow(numParticles, -0.2) * 0.87055/1.2155/1.2155;
+    double coeff = pow(numParticles, -0.2) * 0.87055/1.2155/1.2155/1.2155;
     Eigen::MatrixXd H_cov = coeff * cov_mat;
     cout << "H_cov: " << H_cov << endl;
     // Lower Bound

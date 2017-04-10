@@ -180,7 +180,7 @@ void ShapePlotter::updateMarkers()
 
 
     //alpha to make the particles transparent
-    points.markers[i].color.a = 0.07;
+    points.markers[i].color.a = 0.08;
     // points.markers[i].color.a = 0.2;
 
   }

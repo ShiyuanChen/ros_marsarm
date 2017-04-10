@@ -56,7 +56,7 @@ void fixedSelection(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, t
   std::uniform_int_distribution<> int_rand(0, 3);
   Eigen::Vector3d start;
   Eigen::Vector3d end;
-  double state[6] = {0.3, 0.3, 0.3, 0.5, 0.7, 0.5};
+  double state[6] = {0.0, 0.0, -0.0, 0.0, -0.0, 0.0};
   Eigen::Matrix3d rotationC;
   rotationC << cos(state[5]), -sin(state[5]), 0,
                sin(state[5]), cos(state[5]), 0,
@@ -75,32 +75,32 @@ void fixedSelection(PlotRayUtils &plt, RayTracer &rayt, tf::Point &best_start, t
     index = int_rand(rd);
     if (index == 0)
     {
-      double y = rand(rd) * 0.31 - 0.35;
+      double y = rand(rd) * 0.04 - 0.06;
       double z = rand(rd) * 0.18 + 0.03;
-      start << 2, y, z;
-      end << -1, y, z;
+      start << 1.35, y, z;
+      end << -0.25, y, z;
 
     }
     else if (index == 1)
     {
       double x = rand(rd) * 1.1 + 0.1;
       double z = rand(rd) * 0.18 + 0.03;
-      start << x, -1, z;
-      end << x, 1, z;
+      start << x, -0.35, z;
+      end << x, 0.35, z;
     }
     else if (index == 2)
     {
       double x = rand(rd) * 1.1 + 0.1;
-      double y = rand(rd) * 0.01 - 0.02;
-      start << x, y, 1;
-      end << x, y, -1;
+      double y = rand(rd) * 0.04 - 0.06;
+      start << x, y, 0.32;
+      end << x, y, 0.1;
     }
     else
     {
       double x = rand(rd) * 0.02 + 0.33;
       double y = rand(rd) * 0.2 - 0.35;
-      start << x, y, 1;
-      end << x, y, -1;
+      start << x, y, 0.32;
+      end << x, y, 0.1;
     }
     Eigen::Vector3d tran_start = rotationM * start + displaceV;
     Eigen::Vector3d tran_end = rotationM * end + displaceV;
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
   RayTracer rayt;
 
   std::random_device rd;
-  std::normal_distribution<double> randn(0.0,0.0001);
+  std::normal_distribution<double> randn(0.0,0.00000001);
 
   ROS_INFO("Running...");
 
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
   int i = 0;
   //for(int i=0; i<20; i++){
   while (i < NUM_TOUCHES) {
-    // ros::Duration(1).sleep();
+    // ros::Duration(10).sleep();
     //tf::Point start(0.95,0,-0.15);
     //tf::Point end(0.95,2,-0.15);
     tf::Point start, end;

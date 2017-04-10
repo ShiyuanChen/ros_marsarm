@@ -47,6 +47,9 @@ ParticleHandler::ParticleHandler()
   newParticles = true;
   tf_listener_.waitForTransform("/my_frame", "/particle_frame", ros::Time(0), ros::Duration(10.0));
   tf_listener_.lookupTransform("/particle_frame", "/my_frame", ros::Time(0), trans_);
+
+  tf_listener_true.waitForTransform("/my_frame", "/true_frame", ros::Time(0), ros::Duration(10.0));
+  tf_listener_true.lookupTransform("/true_frame", "/my_frame", ros::Time(0), trans_true);
   particleSub = rosnode.subscribe("particles_from_filter", 1000, 
 				     &ParticleHandler::setParticles, this);
   requestParticlesPub = rosnode.advertise<std_msgs::Empty>("request_particles", 5);
@@ -57,6 +60,13 @@ tf::StampedTransform ParticleHandler::getTransformToPartFrame()
   //TODO: Update when new transform becomes available
   return trans_;
 }
+
+tf::StampedTransform ParticleHandler::getTransformToTrueFrame()
+{
+  //TODO: Update when new transform becomes available
+  return trans_true;
+}
+
 
 void ParticleHandler::setParticles(geometry_msgs::PoseArray p)
 {
@@ -275,7 +285,7 @@ bool RayTracer::tracePartFrameRay(const Ray &ray, double &distToPart)
 
 
 bool RayTracer::traceRay(Ray ray, double &distToPart){
-  transformRayToPartFrame(ray);
+  transformRayToTrueFrame(ray);
   return tracePartFrameRay(ray, distToPart);
 }
 
@@ -438,6 +448,10 @@ void RayTracer::transformRayToPartFrame(Ray &ray)
   ray.transform(particleHandler.getTransformToPartFrame());
 }
 
+void RayTracer::transformRayToTrueFrame(Ray &ray)
+{
+  ray.transform(particleHandler.getTransformToTrueFrame());
+}
 
 		
 
